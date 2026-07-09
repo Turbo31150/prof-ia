@@ -18,7 +18,6 @@
         .product-email { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; font-size: 0.9em; }
         .buy-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: opacity 0.3s; }
         .buy-btn:hover { opacity: 0.9; }
-        .buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .status { text-align: center; font-size: 0.85em; margin-top: 10px; color: #666; }
     </style>
 </head>
@@ -29,7 +28,7 @@
     </div>
 
     <script>
-        const PRODUCTS = [{"name": "PassCerfa — Démarche Guidée", "price": "19€", "description": "Vos démarches admin pré-remplies par IA", "product_id": "passcerfa-guidee", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "PassCerfa — Dossier Complet", "price": "79€", "description": "Dossier complexe monté A-Z par IA", "product_id": "passcerfa-complet", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "PassCerfa — Suivi Mensuel", "price": "15€/mois", "description": "Suivi mensuel + alertes + relances", "product_id": "passcerfa-suivi", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "Agent Sans Coder — Starter", "price": "39€", "description": "1er agent IA sans code", "product_id": "agent-starter", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "Agent Sans Coder — Pro", "price": "290€", "description": "Agent custom complet", "product_id": "agent-pro", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "Transcription IA — Base", "price": "9€", "description": "Audios/vidéos → texte", "product_id": "transcription-base", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "Transcription IA — Pro", "price": "49€", "description": "Transcription illimitée", "product_id": "transcription-pro", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "Prof-IA — Enseignant", "price": "29€", "description": "Assistant pédagogique local", "product_id": "profia-enseignant", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}, {"name": "Prof-IA — Établissement", "price": "149€", "description": "Déploiement établissement", "product_id": "profia-etablissement", "checkout_url": "#PRODUIT-A-CREER-DANS-SYSTEMEIO"}];
+        const PRODUCTS = [{"name": "PassCerfa — Démarche Guidée", "price": "19€", "description": "Vos démarches admin pré-remplies par IA", "product_id": "passcerfa-guidee", "checkout_url": "https://franckdelmas00.systeme.io/checkout/passcerfa-guidee"}, {"name": "PassCerfa — Dossier Complet", "price": "79€", "description": "Dossier complexe monté A-Z par IA", "product_id": "passcerfa-complet", "checkout_url": "https://franckdelmas00.systeme.io/checkout/passcerfa-complet"}, {"name": "PassCerfa — Suivi Mensuel", "price": "15€/mois", "description": "Suivi mensuel + alertes + relances", "product_id": "passcerfa-suivi", "checkout_url": "https://franckdelmas00.systeme.io/checkout/passcerfa-suivi"}, {"name": "Agent Sans Coder — Starter", "price": "39€", "description": "1er agent IA sans code", "product_id": "agent-starter", "checkout_url": "https://franckdelmas00.systeme.io/checkout/agent-starter"}, {"name": "Agent Sans Coder — Pro", "price": "290€", "description": "Agent custom complet", "product_id": "agent-pro", "checkout_url": "https://franckdelmas00.systeme.io/checkout/agent-pro"}, {"name": "Transcription IA — Base", "price": "9€", "description": "Audios/vidéos → texte", "product_id": "transcription-base", "checkout_url": "https://franckdelmas00.systeme.io/checkout/transcription-base"}, {"name": "Transcription IA — Pro", "price": "49€", "description": "Transcription illimitée", "product_id": "transcription-pro", "checkout_url": "https://franckdelmas00.systeme.io/checkout/transcription-pro"}, {"name": "Prof-IA — Enseignant", "price": "29€", "description": "Assistant pédagogique local", "product_id": "profia-enseignant", "checkout_url": "https://franckdelmas00.systeme.io/checkout/profia-enseignant"}, {"name": "Prof-IA — Établissement", "price": "149€", "description": "Déploiement établissement", "product_id": "profia-etablissement", "checkout_url": "https://franckdelmas00.systeme.io/checkout/profia-etablissement"}];
         
         function initProducts() {
             const container = document.getElementById('products');
@@ -61,14 +60,12 @@
             
             statusDiv.textContent = '⏳ Redirection...';
             
-            // Simuler capture email (fallback si endpoint n'existe pas)
             fetch('/api/capture-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, product: product.name })
             }).catch(() => {});
             
-            // Redirection checkout
             setTimeout(() => {
                 window.location.href = product.checkout_url;
             }, 500);
