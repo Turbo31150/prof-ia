@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prof IA — Suivi de classe</title>
+<link rel="stylesheet" href="../css/style.css">
+</head><body>
+<div class="topbar" id="topbar"></div>
+
+<div class="app-head"><div class="wrap">
+  <h1>👥 Suivi de classe</h1>
+  <p>Un tableau d'élèves avec notes et observations, stocké <b>uniquement dans votre navigateur</b> (localStorage). Aucune donnée n'est envoyée nulle part. Générez ensuite des brouillons d'appréciations de bulletin. <b>Module pleinement fonctionnel.</b></p>
+  <span class="priv">🔒 Données élèves 100% locales (localStorage) — jamais transmises</span>
+</div></div>
+
+<section><div class="wrap"><div class="box">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="font-size:1.15rem">Ma classe</h2>
+    <div class="row">
+      <button class="btn btn-g mini" id="add">➕ Ajouter un élève</button>
+      <button class="btn btn-g mini" id="exp">⬇️ Exporter (JSON)</button>
+      <button class="btn btn-g mini" id="clr" style="border-color:var(--err);color:var(--err)">🗑️ Vider</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+  <table id="tbl">
+    <thead><tr>
+      <th style="width:26%">Élève</th><th style="width:12%">Note /20</th>
+      <th>Observations (points forts, difficultés, comportement)</th><th style="width:8%"></th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  </div>
+  <p class="status" id="save"></p>
+</div></div></section>
+
+<section><div class="wrap"><div class="box">
+  <h2 style="font-size:1.15rem">Générer une appréciation de bulletin</h2>
+  <p class="q">Choisissez un élève : Prof IA rédige un brouillon d'appréciation bienveillant à partir de sa note et de vos observations. Rien ne sort de la machine.</p>
+  <div class="grid2">
+    <div>
+      <label for="pick">Élève</label>
+      <select id="pick"></select>
+    </div>
+    <div>
+      <label for="ton">Ton / cadre</label>
+      <select id="ton">
+        <option>Bienveillant et encourageant</option>
+        <option>Factuel et synthétique</option>
+        <option>Exigeant mais juste</option>
+        <option>Conseil de classe (formel)</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <button class="btn btn-p" id="go">🖋️ Rédiger l'appréciation</button>
+    <button class="copy" id="cp">📋 Copier</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="out empty" id="out">L'appréciation apparaîtra ici.</div>
+</div></div></section>
+
+<script src="../js/llm.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+mountNav('classe.html');
+const $ = id => document.getElementById(id);
+
+// ── Persistance 100% locale ────────────────────────────────
+const KEY = 'profia.classe.v1';
+let eleves = load();
+
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+function persist(){
+  localStorage.setItem(KEY, JSON.stringify(eleves));
+  $('save').textContent = '💾 Enregistré localement (' + eleves.length + ' élève' + (eleves.length>1?'s':'') + ') — ' + new Date().toLocaleTimeString('fr-FR');
+}
+
+// Construit une ligne de tableau sans injecter de HTML utilisateur (valeurs via .value).
+function makeRow(el, i){
+  const tr = document.createElement('tr');
+
+  const tdN = document.createElement('td');
+  const inN = document.createElement('input');
+  inN.type='text'; inN.placeholder='Prénom / nom'; inN.value = el.nom || '';
+  inN.addEventListener('input', ()=>{ eleves[i].nom = inN.value; persist(); refreshPicker(); });
+  tdN.appendChild(inN); tr.appendChild(tdN);
+
+  const tdG = document.createElement('td');
+  const inG = document.createElement('input');
+  inG.type='text'; inG.placeholder='ex. 14'; inG.value = el.note || '';
+  inG.addEventListener('input', ()=>{ eleves[i].note = inG.value; persist(); });
+  tdG.appendChild(inG); tr.appendChild(tdG);
+
+  const tdO = document.createElement('td');
+  const inO = document.createElement('input');
+  inO.type='text'; inO.placeholder='Observations libres'; inO.value = el.obs || '';
+  inO.addEventListener('input', ()=>{ eleves[i].obs = inO.value; persist(); });
+  tdO.appendChild(inO); tr.appendChild(tdO);
+
+  const tdX = document.createElement('td');
+  const bx = document.createElement('button');
+  bx.className='copy'; bx.textContent='✕'; bx.style.borderColor='var(--err)'; bx.style.color='var(--err)';
+  bx.addEventListener('click', ()=>{ eleves.splice(i,1); persist(); render(); });
+  tdX.appendChild(bx); tr.appendChild(tdX);
+
+  return tr;
+}
+
+function render(){
+  const rows = $('rows'); rows.textContent='';
+  eleves.forEach((el,i)=> rows.appendChild(makeRow(el,i)));
+  refreshPicker(); persist();
+}
+
+function refreshPicker(){
+  const sel = $('pick'); const prev = sel.value; sel.textContent='';
+  eleves.forEach((el,i)=>{
+    const o = document.createElement('option');
+    o.value = i; o.textContent = (el.nom || 'Élève ' + (i+1)) + (el.note ? ' — ' + el.note + '/20' : '');
+    sel.appendChild(o);
+  });
+  if (prev && sel.querySelector('option[value="'+prev+'"]')) sel.value = prev;
+}
+
+$('add').addEventListener('click', ()=>{ eleves.push({nom:'',note:'',obs:''}); render(); });
+$('clr').addEventListener('click', ()=>{ if(confirm('Vider toute la classe (localStorage) ?')){ eleves=[]; render(); } });
+$('exp').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(eleves,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'ma-classe.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+
+// Amorce : au moins une ligne pour l'ergonomie.
+if (!eleves.length) eleves.push({nom:'',note:'',obs:''});
+render();
+
+// ── Génération d'appréciation (IA locale) ──────────────────
+runLLMForm({
+  btn: $('go'), out: $('out'), status: $('status'),
+  opts: { temperature: 0.6, max_tokens: 500 },
+  buildPrompt(){
+    const i = parseInt($('pick').value, 10);
+    const el = eleves[i];
+    if (!el || (!el.nom && !el.obs && !el.note)) throw new Error('Renseignez au moins un élève avec une note ou des observations.');
+    return `Rédige une appréciation de bulletin scolaire, en français, ton « ${$('ton').value} ».
+Élève : ${el.nom || 'l\'élève'}
+Note : ${el.note || 'non renseignée'}/20
+Observations de l'enseignant : ${el.obs || 'aucune'}
+
+Contraintes : 2 à 4 phrases, personnalisée, souligne un point fort et une piste de progrès concrète, pas de formule creuse. Ne mentionne pas que c'est une IA.`;
+  }
+});
+$('cp').addEventListener('click', e => {
+  const el = $('out');
+  if (el.textContent && !el.classList.contains('empty')) copyText(el.textContent, e.target);
+});
+</script>
+</body></html>

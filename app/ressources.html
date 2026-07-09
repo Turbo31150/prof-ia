@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prof IA — Banque de ressources</title>
+<link rel="stylesheet" href="../css/style.css">
+</head><body>
+<div class="topbar" id="topbar"></div>
+
+<div class="app-head"><div class="wrap">
+  <h1>📚 Banque de ressources <span class="tag">Scaffold</span></h1>
+  <p>Organisez et retrouvez vos ressources pédagogiques (liens, fiches, séquences), stockées <b>localement</b>. La recherche assistée par IA est prévue (voir TODO ci-dessous). L'ajout, la recherche par mot-clé et le filtre par matière sont <b>déjà fonctionnels et hors ligne</b>.</p>
+  <span class="priv">🔒 Ressources stockées en local (localStorage)</span>
+</div></div>
+
+<section><div class="wrap"><div class="box">
+  <h2 style="font-size:1.15rem">Ajouter une ressource</h2>
+  <div class="grid2">
+    <div><label for="titre">Titre</label><input id="titre" placeholder="Ex. Fiche : les fractions équivalentes"></div>
+    <div><label for="matiere">Matière / thème</label><input id="matiere" placeholder="Ex. Mathématiques"></div>
+  </div>
+  <label for="lien">Lien ou emplacement (optionnel)</label>
+  <input id="lien" placeholder="Ex. https://… ou /Documents/fiches/fractions.pdf">
+  <label for="desc">Description / mots-clés</label>
+  <textarea id="desc" placeholder="À quoi sert cette ressource, pour quel niveau, mots-clés de recherche…"></textarea>
+  <button class="btn btn-p" id="add">➕ Enregistrer la ressource</button>
+  <p class="status" id="save"></p>
+</div></div></section>
+
+<section><div class="wrap"><div class="box">
+  <h2 style="font-size:1.15rem">Mes ressources</h2>
+  <div class="row">
+    <input id="q" placeholder="🔎 Rechercher par mot-clé…" style="flex:1;margin:0">
+    <input id="fm" placeholder="Filtrer par matière" style="flex:1;margin:0">
+  </div>
+  <div id="list" style="margin-top:14px"></div>
+
+  <div class="todo">
+    <b>TODO — Recherche assistée par IA locale.</b><br>
+    Brancher un bouton « Suggérer des ressources » qui appelle <code>askLocalLLM()</code> (llm.js) pour :
+    proposer des idées de ressources sur un thème, reformuler des mots-clés, ou classer automatiquement les entrées par compétence.
+    L'UI, le stockage local et le filtrage sont déjà en place ; il ne reste qu'à câbler l'appel LLM comme dans <code>sequence.html</code>.
+  </div>
+</div></div></section>
+
+<script src="../js/llm.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+mountNav('ressources.html');
+const $ = id => document.getElementById(id);
+
+const KEY = 'profia.ressources.v1';
+let items = load();
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+function persist(){ localStorage.setItem(KEY, JSON.stringify(items)); }
+
+$('add').addEventListener('click', ()=>{
+  const t = $('titre').value.trim();
+  if (!t){ $('save').className='status err'; $('save').textContent='⚠️ Un titre est requis.'; return; }
+  items.unshift({ titre:t, matiere:$('matiere').value.trim(), lien:$('lien').value.trim(), desc:$('desc').value.trim() });
+  persist();
+  $('titre').value=$('matiere').value=$('lien').value=$('desc').value='';
+  $('save').className='status'; $('save').textContent='💾 Ressource enregistrée localement.';
+  render();
+});
+
+// Rendu sans injection HTML : chaque valeur passe par textContent / href contrôlé.
+function card(it){
+  const d = document.createElement('div');
+  d.className='box'; d.style.marginTop='10px'; d.style.padding='16px';
+  const h = document.createElement('h3'); h.style.fontSize='1rem'; h.textContent = it.titre;
+  d.appendChild(h);
+  if (it.matiere){ const m=document.createElement('span'); m.className='tag'; m.textContent=it.matiere; d.appendChild(m); }
+  if (it.desc){ const p=document.createElement('p'); p.style.color='var(--muted)'; p.style.margin='8px 0'; p.style.fontSize='.9rem'; p.textContent=it.desc; d.appendChild(p); }
+  if (it.lien){
+    const a=document.createElement('a'); a.textContent='🔗 Ouvrir'; a.style.fontSize='.85rem';
+    // On n'accepte que http(s) ou chemin local relatif pour éviter les schémas dangereux (javascript:).
+    a.href = /^(https?:|\/)/i.test(it.lien) ? it.lien : '#';
+    if (a.getAttribute('href') !== '#'){ a.target='_blank'; a.rel='noopener'; }
+    d.appendChild(a);
+  }
+  const del=document.createElement('button'); del.className='copy'; del.textContent='Supprimer';
+  del.style.marginLeft='10px'; del.style.borderColor='var(--err)'; del.style.color='var(--err)';
+  del.addEventListener('click', ()=>{ items = items.filter(x=>x!==it); persist(); render(); });
+  d.appendChild(del);
+  return d;
+}
+
+function render(){
+  const q = $('q').value.trim().toLowerCase();
+  const fm = $('fm').value.trim().toLowerCase();
+  const list = $('list'); list.textContent='';
+  const filtered = items.filter(it=>{
+    const hay = (it.titre+' '+it.matiere+' '+it.desc).toLowerCase();
+    return (!q || hay.includes(q)) && (!fm || (it.matiere||'').toLowerCase().includes(fm));
+  });
+  if (!filtered.length){ const e=document.createElement('p'); e.className='status'; e.textContent = items.length ? 'Aucune ressource ne correspond au filtre.' : 'Aucune ressource pour l’instant — ajoutez la première ci-dessus.'; list.appendChild(e); return; }
+  filtered.forEach(it=> list.appendChild(card(it)));
+}
+$('q').addEventListener('input', render);
+$('fm').addEventListener('input', render);
+render();
+</script>
+</body></html>

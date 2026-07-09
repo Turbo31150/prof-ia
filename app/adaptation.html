@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prof IA — Différenciation &amp; adaptation handicap</title>
+<link rel="stylesheet" href="../css/style.css">
+</head><body>
+<div class="topbar" id="topbar"></div>
+
+<div class="app-head"><div class="wrap">
+  <h1>♿ Différenciation &amp; adaptation handicap</h1>
+  <p>Collez un contenu existant : Prof IA le réécrit en version accessible (FALC, découpage, consignes reformulées) selon le profil de l'élève. <b>Module pleinement fonctionnel</b> (IA locale).</p>
+  <span class="priv">🔒 Traitement local — aucun contenu élève envoyé en ligne</span>
+</div></div>
+
+<section><div class="wrap"><div class="box">
+  <label for="profil">Profil / besoin de l'élève</label>
+  <select id="profil">
+    <option value="DYS (dyslexie / dysorthographie)">DYS — dyslexie / dysorthographie</option>
+    <option value="TDAH (trouble de l'attention)">TDAH — trouble de l'attention</option>
+    <option value="dyspraxie">Dyspraxie</option>
+    <option value="dyscalculie">Dyscalculie</option>
+    <option value="élève allophone (français langue seconde)">Allophone (FLS)</option>
+    <option value="FALC (Facile À Lire et à Comprendre) — niveau maximal">FALC — accessibilité maximale</option>
+  </select>
+
+  <label for="niveau">Niveau / classe (optionnel)</label>
+  <input id="niveau" placeholder="Ex. CE2, 4e…">
+
+  <label for="contenu">Contenu à adapter</label>
+  <textarea id="contenu" style="min-height:180px" placeholder="Collez ici la consigne, le texte, l'énoncé ou la leçon à rendre accessible."></textarea>
+
+  <div class="row">
+    <button class="btn btn-p" id="go">♿ Adapter le contenu</button>
+    <button class="copy" id="cp">📋 Copier le résultat</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="out empty" id="out">La version adaptée apparaîtra ici.</div>
+</div></div></section>
+
+<script src="../js/llm.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+mountNav('adaptation.html');
+
+const $ = id => document.getElementById(id);
+runLLMForm({
+  btn: $('go'), out: $('out'), status: $('status'),
+  // Expertise accessibilité : message système spécialisé.
+  opts: {
+    temperature: 0.3, max_tokens: 1500,
+    system: "Tu es un expert français de l'adaptation pédagogique et de l'accessibilité " +
+            "(troubles DYS, TDAH, FALC, élèves allophones). Tu réécris un contenu scolaire pour " +
+            "le rendre accessible SANS en changer le sens ni le niveau d'exigence. " +
+            "Tu appliques les bonnes pratiques : phrases courtes, une idée par phrase, vocabulaire simple " +
+            "expliqué si besoin, consignes découpées en étapes numérotées, mise en évidence des mots-clés, " +
+            "aération. Réponds en français impeccable."
+  },
+  buildPrompt() {
+    const c = $('contenu').value.trim();
+    if (!c) throw new Error('Collez d’abord un contenu à adapter.');
+    const p = $('profil').value;
+    const niv = $('niveau').value.trim();
+    return `Adapte le contenu ci-dessous pour un élève avec ce profil : ${p}.${niv ? '\nNiveau : ' + niv : ''}
+
+Rends :
+1. « VERSION ADAPTÉE » : le contenu réécrit, accessible, prêt à distribuer.
+2. « CONSIGNES REFORMULÉES » : les consignes découpées en étapes simples et numérotées.
+3. « CONSEILS À L'ENSEIGNANT » : 3 à 5 aménagements concrets pour ce profil (temps, support, présentation).
+
+Contenu d'origine :
+"""${c}"""`;
+  }
+});
+
+$('cp').addEventListener('click', e => {
+  const el = document.getElementById('out');
+  if (el.textContent && !el.classList.contains('empty')) copyText(el.textContent, e.target);
+});
+</script>
+</body></html>

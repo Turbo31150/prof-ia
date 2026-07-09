@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prof IA — Préparation de séquence</title>
+<link rel="stylesheet" href="../css/style.css">
+</head><body>
+<div class="topbar" id="topbar"></div>
+
+<div class="app-head"><div class="wrap">
+  <h1>📘 Préparation de séquence / cours</h1>
+  <p>Renseignez le cadre de votre séance : Prof IA rédige un plan de séance structuré, prêt à ajuster. <b>Module pleinement fonctionnel</b> (IA locale).</p>
+  <span class="priv">🔒 Aucune donnée envoyée sur Internet — génération locale</span>
+</div></div>
+
+<section><div class="wrap"><div class="box">
+  <div class="grid2">
+    <div>
+      <label for="matiere">Matière</label>
+      <input id="matiere" placeholder="Ex. Mathématiques, Français, Histoire-Géo…">
+    </div>
+    <div>
+      <label for="niveau">Niveau / classe</label>
+      <input id="niveau" placeholder="Ex. CM2, 5e, Seconde…">
+    </div>
+  </div>
+  <label for="objectif">Objectif pédagogique</label>
+  <input id="objectif" placeholder="Ex. Comprendre la proportionnalité et l'appliquer à des situations concrètes">
+  <div class="grid2">
+    <div>
+      <label for="duree">Durée</label>
+      <input id="duree" placeholder="Ex. 55 min, 2 séances de 45 min…">
+    </div>
+    <div>
+      <label for="modalite">Modalité (optionnel)</label>
+      <input id="modalite" placeholder="Ex. classe entière, îlots, demi-groupe…">
+    </div>
+  </div>
+  <label for="notes">Contraintes / précisions (optionnel)</label>
+  <textarea id="notes" placeholder="Ex. classe avec 3 élèves DYS, pas de vidéoprojecteur, prévoir une différenciation…"></textarea>
+
+  <div class="row">
+    <button class="btn btn-p" id="go">📝 Générer le plan de séance</button>
+    <button class="copy" id="cp">📋 Copier le résultat</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="out empty" id="out">Le plan de séance apparaîtra ici.</div>
+</div></div></section>
+
+<script src="../js/llm.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+mountNav('sequence.html');
+
+const $ = id => document.getElementById(id);
+runLLMForm({
+  btn: $('go'), out: $('out'), status: $('status'),
+  opts: { temperature: 0.5, max_tokens: 1400 },
+  buildPrompt() {
+    const mat = $('matiere').value.trim();
+    const niv = $('niveau').value.trim();
+    const obj = $('objectif').value.trim();
+    const dur = $('duree').value.trim();
+    if (!mat || !niv || !obj || !dur) throw new Error('Matière, niveau, objectif et durée sont requis.');
+    const mod = $('modalite').value.trim();
+    const notes = $('notes').value.trim();
+    return `Rédige un plan de séance clair et structuré pour un enseignant.
+Matière : ${mat}
+Niveau : ${niv}
+Objectif pédagogique : ${obj}
+Durée : ${dur}${mod ? '\nModalité : ' + mod : ''}${notes ? '\nContraintes : ' + notes : ''}
+
+Structure attendue :
+1. Objectifs et compétences visées (référence aux programmes)
+2. Prérequis
+3. Matériel
+4. Déroulé minuté (accroche, activités, mise en commun, trace écrite) avec durées
+5. Différenciation (élèves en difficulté et élèves avancés)
+6. Évaluation / critères de réussite
+7. Prolongements possibles
+Sois concret et directement utilisable en classe.`;
+  }
+});
+
+$('cp').addEventListener('click', e => {
+  const t = document.getElementById('out').textContent;
+  if (t && !document.getElementById('out').classList.contains('empty')) copyText(t, e.target);
+});
+</script>
+</body></html>

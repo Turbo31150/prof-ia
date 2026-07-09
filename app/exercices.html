@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prof IA — Générateur d'exercices &amp; évaluations</title>
+<link rel="stylesheet" href="../css/style.css">
+</head><body>
+<div class="topbar" id="topbar"></div>
+
+<div class="app-head"><div class="wrap">
+  <h1>✏️ Générateur d'exercices &amp; évaluations</h1>
+  <p>Choisissez un thème, un niveau et un type : Prof IA produit des exercices <b>et leur corrigé</b>. <b>Module pleinement fonctionnel</b> (IA locale).</p>
+  <span class="priv">🔒 Génération 100% locale — rien n'est envoyé en ligne</span>
+</div></div>
+
+<section><div class="wrap"><div class="box">
+  <div class="grid2">
+    <div>
+      <label for="theme">Thème / notion</label>
+      <input id="theme" placeholder="Ex. les fractions, l'accord du participe passé, la Révolution française…">
+    </div>
+    <div>
+      <label for="niveau">Niveau / classe</label>
+      <input id="niveau" placeholder="Ex. 6e, Terminale…">
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <label for="type">Type d'exercice</label>
+      <select id="type">
+        <option>QCM</option>
+        <option>Exercices d'application</option>
+        <option>Problèmes</option>
+        <option>Questions ouvertes</option>
+        <option>Texte à trous</option>
+        <option>Évaluation notée (barème)</option>
+        <option>Dictée / production écrite</option>
+      </select>
+    </div>
+    <div>
+      <label for="nb">Nombre d'exercices</label>
+      <input id="nb" type="number" min="1" max="20" value="5">
+    </div>
+  </div>
+  <label for="diff">Difficulté / consignes particulières (optionnel)</label>
+  <textarea id="diff" placeholder="Ex. progression facile → difficile, prévoir un exercice bonus, éviter les calculatrices…"></textarea>
+
+  <div class="row">
+    <button class="btn btn-p" id="go">🧮 Générer exercices + corrigé</button>
+    <button class="copy" id="cp">📋 Copier le résultat</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="out empty" id="out">Les exercices et leur corrigé apparaîtront ici.</div>
+</div></div></section>
+
+<script src="../js/llm.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+mountNav('exercices.html');
+
+const $ = id => document.getElementById(id);
+runLLMForm({
+  btn: $('go'), out: $('out'), status: $('status'),
+  opts: { temperature: 0.5, max_tokens: 1600 },
+  buildPrompt() {
+    const th = $('theme').value.trim();
+    const niv = $('niveau').value.trim();
+    if (!th || !niv) throw new Error('Thème et niveau sont requis.');
+    const type = $('type').value;
+    const nb = parseInt($('nb').value, 10) || 5;
+    const diff = $('diff').value.trim();
+    return `Génère ${nb} exercice(s) de type « ${type} » pour un enseignant.
+Thème : ${th}
+Niveau : ${niv}${diff ? '\nConsignes : ' + diff : ''}
+
+Contraintes de rendu :
+- Numérote les exercices.
+- Consignes claires, adaptées au niveau indiqué.
+- Puis une section « CORRIGÉ » séparée, avec les réponses détaillées et, si pertinent, les étapes de raisonnement.
+${type.includes('barème') || type.includes('Évaluation') ? '- Ajoute un barème chiffré (total sur 20).' : ''}
+Français impeccable, prêt à imprimer.`;
+  }
+});
+
+$('cp').addEventListener('click', e => {
+  const el = document.getElementById('out');
+  if (el.textContent && !el.classList.contains('empty')) copyText(el.textContent, e.target);
+});
+</script>
+</body></html>
