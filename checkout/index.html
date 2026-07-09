@@ -21,7 +21,6 @@
         .buy-btn:hover { opacity: 0.9; }
         .payment-status { text-align: center; font-size: 0.85em; margin-top: 10px; color: #666; }
         .footer { text-align: center; color: white; margin-top: 50px; font-size: 0.9em; }
-        .admin-link { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.2); color: white; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-size: 0.85em; }
     </style>
 </head>
 <body>
@@ -40,7 +39,7 @@
     </div>
 
     <script>
-        const PRODUCTS = [{"name": "PassCerfa — Démarche Guidée", "price": "19€", "desc": "Vos démarches admin pré-remplies par IA", "slug": "passcerfa-guidee"}, {"name": "PassCerfa — Dossier Complet", "price": "79€", "desc": "Dossier complexe monté A-Z par IA", "slug": "passcerfa-complet"}, {"name": "PassCerfa — Suivi Mensuel", "price": "15€/mois", "desc": "Suivi mensuel + alertes + relances", "slug": "passcerfa-suivi"}, {"name": "Agent Sans Coder — Starter", "price": "39€", "desc": "1er agent IA sans code", "slug": "agent-starter"}, {"name": "Agent Sans Coder — Pro", "price": "290€", "desc": "Agent custom complet", "slug": "agent-pro"}, {"name": "Transcription IA — Base", "price": "9€", "desc": "Audios/vidéos → texte", "slug": "transcription-base"}, {"name": "Transcription IA — Pro", "price": "49€", "desc": "Transcription illimitée", "slug": "transcription-pro"}, {"name": "Prof-IA — Enseignant", "price": "29€", "desc": "Assistant pédagogique local", "slug": "profia-enseignant"}, {"name": "Prof-IA — Établissement", "price": "149€", "desc": "Déploiement établissement", "slug": "profia-etablissement"}];
+        const PRODUCTS = [{"name": "PassCerfa — Démarche Guidée", "price": "19€", "desc": "Vos démarches admin pré-remplies par IA", "slug": "passcerfa-guidee", "checkout_url": "https://franckdelmas00.systeme.io/checkout/passcerfa-guidee"}, {"name": "PassCerfa — Dossier Complet", "price": "79€", "desc": "Dossier complexe monté A-Z par IA", "slug": "passcerfa-complet", "checkout_url": "https://franckdelmas00.systeme.io/checkout/passcerfa-complet"}, {"name": "PassCerfa — Suivi Mensuel", "price": "15€/mois", "desc": "Suivi mensuel + alertes + relances", "slug": "passcerfa-suivi", "checkout_url": "https://franckdelmas00.systeme.io/checkout/passcerfa-suivi"}, {"name": "Agent Sans Coder — Starter", "price": "39€", "desc": "1er agent IA sans code", "slug": "agent-starter", "checkout_url": "https://franckdelmas00.systeme.io/checkout/agent-starter"}, {"name": "Agent Sans Coder — Pro", "price": "290€", "desc": "Agent custom complet", "slug": "agent-pro", "checkout_url": "https://franckdelmas00.systeme.io/checkout/agent-pro"}, {"name": "Transcription IA — Base", "price": "9€", "desc": "Audios/vidéos → texte", "slug": "transcription-base", "checkout_url": "https://franckdelmas00.systeme.io/checkout/transcription-base"}, {"name": "Transcription IA — Pro", "price": "49€", "desc": "Transcription illimitée", "slug": "transcription-pro", "checkout_url": "https://franckdelmas00.systeme.io/checkout/transcription-pro"}, {"name": "Prof-IA — Enseignant", "price": "29€", "desc": "Assistant pédagogique local", "slug": "profia-enseignant", "checkout_url": "https://franckdelmas00.systeme.io/checkout/profia-enseignant"}, {"name": "Prof-IA — Établissement", "price": "149€", "desc": "Déploiement établissement", "slug": "profia-etablissement", "checkout_url": "https://franckdelmas00.systeme.io/checkout/profia-etablissement"}];
         
         function initProducts() {
             const container = document.getElementById('products');
@@ -73,16 +72,14 @@
             
             statusDiv.textContent = '⏳ Redirection paiement...';
             
-            // Capturer l'email
             fetch('/api/capture-email', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ email, product: product.name })
             }).catch(() => {});
             
-            // Redirection vers Systeme.io checkout
             setTimeout(() => {
-                window.location.href = `https://franckdelmas00.systeme.io/checkout/${product.slug}`;
+                window.location.href = product.checkout_url;
             }, 500);
         }
         
